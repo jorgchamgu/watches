@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyse a Watch - DialIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAFA; --bg-card: #F4F4F5; --bg-dark: #18181B;
+      --border: #E4E4E7; --text: #18181B; --text-2: #71717A;
+      --text-3: #A1A1AA; --blue: #2563EB; --blue-light: #EFF6FF;
+      --green: #16A34A; --green-light: #DCFCE7;
+      --red: #DC2626; --amber: #D97706; --white: #FFFFFF;
+      --r: 10px; --r-lg: 16px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.6; min-height: 100vh; }
+
+    nav { background: rgba(250,250,250,.94); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); height: 58px; display: flex; align-items: center; padding: 0 32px; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -.03em; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-back { font-size: 14px; font-weight: 500; color: var(--text-2); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color .15s; }
+    .nav-back:hover { color: var(--text); }
+    .page { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* STEPS */
+    .steps { display: flex; align-items: center; margin-bottom: 40px; }
+    .step-item { display: flex; align-items: center; gap: 8px; }
+    .step-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; border: 1.5px solid var(--border); color: var(--text-3); background: var(--white); transition: all .2s; flex-shrink: 0; }
+    .step-dot.active { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .step-dot.done { border-color: var(--green); color: var(--white); background: var(--green); }
+    .step-label { font-size: 12px; font-weight: 500; color: var(--text-3); transition: color .2s; }
+    .step-label.active { color: var(--text); }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* UPLOAD */
+    .section-title { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 8px; }
+    .section-sub { font-size: 15px; color: var(--text-2); margin-bottom: 28px; line-height: 1.6; }
+    .dropzone { border: 2px dashed var(--border); border-radius: var(--r-lg); padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; background: var(--white); position: relative; }
+    .dropzone:hover, .dropzone.over { border-color: var(--blue); background: var(--blue-light); }
+    .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .dz-icon { margin: 0 auto 14px; display: block; }
+    .dz-text { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .dz-sub { font-size: 13px; color: var(--text-3); }
+    .dz-preview { display: none; position: relative; }
+    .dz-preview img { width: 100%; max-height: 320px; object-fit: contain; border-radius: var(--r); }
+    .dz-rm { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .btn-main { display: block; width: 100%; background: var(--bg-dark); color: var(--white); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; border-radius: var(--r); border: none; cursor: pointer; margin-top: 16px; transition: opacity .15s; letter-spacing: -.01em; }
+    .btn-main:hover { opacity: .82; }
+    .btn-main:disabled { opacity: .38; cursor: not-allowed; }
+
+    /* LOADING */
+    .loading-wrap { text-align: center; padding: 56px 0; }
+    .spinner { width: 36px; height: 36px; border: 2.5px solid var(--border); border-top-color: var(--bg-dark); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 8px; }
+    .loading-sub { font-size: 14px; color: var(--text-2); margin-bottom: 24px; }
+    .lsteps { display: flex; flex-direction: column; gap: 10px; max-width: 260px; margin: 0 auto; }
+    .ls { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-3); }
+    .ls.active { color: var(--text); font-weight: 500; }
+    .ls.done { color: var(--green); }
+    .ls-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .ls.active .ls-dot { background: var(--text); }
+    .ls.done .ls-dot { background: var(--green); }
+
+    /* CONDITION */
+    .id-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 24px; display: flex; }
+    .id-img { width: 110px; min-height: 110px; object-fit: cover; flex-shrink: 0; background: var(--bg-card); }
+    .id-body { padding: 14px 16px; flex: 1; }
+    .id-name { font-size: 15px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 2px; }
+    .id-ref { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+    .id-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .id-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--bg-card); color: var(--text-2); border: .5px solid var(--border); }
+    .id-conf { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+    .id-conf::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .chigh { color: var(--green); } .cmed { color: var(--amber); } .clow { color: var(--red); }
+    .cond-group { margin-bottom: 18px; }
+    .cond-lbl { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: block; }
+    .tog-row { display: flex; gap: 8px; }
+    .tog { flex: 1; padding: 10px; border-radius: var(--r); border: 1.5px solid var(--border); background: var(--white); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all .15s; }
+    .tog.on { border-color: var(--bg-dark); background: var(--bg-dark); color: var(--white); }
+    .grade-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+    .grade-btn { padding: 10px 6px; border-radius: var(--r); border: 1.5px solid var(--border); background: var(--white); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all .15s; }
+    .grade-btn.on { border-color: var(--bg-dark); background: var(--bg-dark); color: var(--white); }
+    .year-inp { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; padding: 11px 14px; border-radius: var(--r); border: 1.5px solid var(--border); color: var(--text); background: var(--white); outline: none; transition: border-color .15s; }
+    .year-inp:focus { border-color: var(--blue); }
+
+    /* RESULT */
+    .r-name { font-size: 20px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 2px; }
+    .r-ref { font-size: 13px; color: var(--text-2); margin-bottom: 20px; }
+    .r-main { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 10px; }
+    .rn { background: var(--white); padding: 18px 16px; }
+    .rn-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); margin-bottom: 5px; }
+    .rn-val { font-size: 22px; font-weight: 700; letter-spacing: -.03em; }
+    .rn-val.grn { color: var(--green); }
+    .rn-val.blu { color: var(--blue); }
+
+    /* RANGE BAR */
+    .r-range { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 10px; }
+    .r-range-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .r-range-item { text-align: center; }
+    .r-range-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-bottom: 3px; }
+    .r-range-val { font-size: 14px; font-weight: 600; color: var(--text); }
+    .range-bar-wrap { position: relative; height: 6px; background: var(--bg-card); border-radius: 3px; margin-top: 4px; }
+    .range-bar-fill { position: absolute; top: 0; height: 100%; background: var(--blue); border-radius: 3px; }
+    .range-bar-dot { position: absolute; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--border); transform: translateX(-50%); }
+
+    /* VERDICT */
+    .r-meta { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .r-verdict { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; }
+    .vgood { background: var(--green-light); color: var(--green); }
+    .vfair { background: #FEF9C3; color: #854D0E; }
+    .vhigh { background: #FEE2E2; color: var(--red); }
+    .r-trend { font-size: 13px; font-weight: 600; }
+    .tup { color: var(--green); } .tdown { color: var(--red); } .tstable { color: var(--text-2); }
+    .r-reason { font-size: 13px; color: var(--text-2); line-height: 1.65; padding: 12px 14px; background: var(--bg-card); border-radius: var(--r); margin-bottom: 10px; }
+
+    /* REGIONS */
+    .section-lbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; margin-top: 20px; }
+    .regions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+    .reg { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 14px; }
+    .reg-flag { font-size: 18px; margin-bottom: 6px; }
+    .reg-name { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .reg-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+    .reg-key { font-size: 12px; color: var(--text-2); }
+    .reg-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .reg-note { font-size: 11px; color: var(--text-3); line-height: 1.5; margin-top: 6px; padding-top: 6px; border-top: .5px solid var(--border); }
+
+    /* CHART */
+    .chart-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 16px 12px; margin-bottom: 10px; }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .chart-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .chart-subtitle { font-size: 12px; color: var(--text-3); }
+    .chart-canvas-wrap { position: relative; width: 100%; height: 160px; }
+
+    /* EXTRAS */
+    .r-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .rx { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 14px; }
+    .rx-lbl { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+    .rx-val { font-size: 14px; font-weight: 600; color: var(--text); }
+    .rx-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+    .r-source { font-size: 12px; color: var(--text-3); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+    .s-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; }
+    .s-dot.live { background: var(--green); }
+
+    /* LOCKED */
+    .locked-banner { background: var(--bg-dark); border-radius: var(--r-lg); padding: 20px 24px; text-align: center; margin-bottom: 20px; }
+    .locked-banner h3 { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+    .locked-banner p { font-size: 13px; color: #A1A1AA; margin-bottom: 16px; line-height: 1.55; }
+    .btn-unlock { display: block; background: var(--white); color: var(--bg-dark); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; padding: 12px; border-radius: var(--r); border: none; cursor: pointer; text-decoration: none; transition: opacity .15s; }
+    .btn-unlock:hover { opacity: .88; }
+    .r-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-new { background: var(--bg-dark); color: var(--white); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 13px; border-radius: var(--r); border: none; cursor: pointer; letter-spacing: -.01em; }
+    .btn-new:hover { opacity: .82; }
+    .btn-see { background: transparent; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 13px; border-radius: var(--r); border: 1.5px solid var(--border); cursor: pointer; text-decoration: none; display: block; text-align: center; }
+    .btn-see:hover { background: var(--bg-card); }
+    .err-box { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--r); padding: 12px 14px; font-size: 13px; color: var(--red); margin-bottom: 14px; display: none; }
+
+    @media (max-width: 580px) {
+      nav { padding: 0 16px; }
+      .page { padding: 32px 16px 60px; }
+      .r-main { grid-template-columns: 1fr 1fr; }
+      .rn:last-child { grid-column: span 2; }
+      .grade-grid { grid-template-columns: repeat(2,1fr); }
+      .regions { grid-template-columns: 1fr; }
+      .r-extra { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Dial<span>IQ</span></a>
+  <a class="nav-back" href="/">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back
+  </a>
+</nav>
+
+<div class="page">
+  <div class="steps">
+    <div class="step-item"><div class="step-dot active" id="d1">1</div><span class="step-label active" id="l1">Photo</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot" id="d2">2</div><span class="step-label" id="l2">Condition</span></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-dot" id="d3">3</div><span class="step-label" id="l3">Price</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="panel active" id="panel-upload">
+    <h1 class="section-title">Photograph the watch</h1>
+    <p class="section-sub">Upload a clear photo of the dial. The AI identifies brand, model, and exact reference automatically.</p>
+    <div class="dropzone" id="dropzone">
+      <input type="file" accept="image/*" id="fi" />
+      <div id="dz-empty">
+        <svg class="dz-icon" width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <rect width="44" height="44" rx="10" fill="#F4F4F5"/>
+          <path d="M14 30l6-6 3.5 3.5L29 20l7 10H14z" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="18" cy="20" r="2.5" stroke="#A1A1AA" stroke-width="1.5"/>
+          <path d="M22 13v-4m0 0l-2.5 2.5M22 9l2.5 2.5" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="dz-text">Drop photo here or click to upload</p>
+        <p class="dz-sub">JPG, PNG or HEIC</p>
+      </div>
+      <div class="dz-preview" id="dz-prev">
+        <img id="prev-img" src="" alt="Watch" />
+        <button class="dz-rm" id="dz-rm" type="button">x</button>
+      </div>
+    </div>
+    <div class="err-box" id="err1">Could not read the image. Please try another photo.</div>
+    <button class="btn-main" id="btn-id" disabled>Identify watch</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="panel" id="panel-loading">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <p class="loading-title" id="lt">Analysing photo...</p>
+      <p class="loading-sub" id="ls-sub">This takes about 10 seconds</p>
+      <div class="lsteps">
+        <div class="ls active" id="ls1"><span class="ls-dot"></span>Reading image details</div>
+        <div class="ls" id="ls2"><span class="ls-dot"></span>Identifying reference</div>
+        <div class="ls" id="ls3"><span class="ls-dot"></span>Checking dealer market</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="panel" id="panel-condition">
+    <div class="id-card">
+      <img class="id-img" id="id-img" src="" alt="Watch" />
+      <div class="id-body">
+        <p class="id-name" id="id-name">Loading...</p>
+        <p class="id-ref" id="id-ref"></p>
+        <div class="id-tags" id="id-tags"></div>
+        <span class="id-conf chigh" id="id-conf">High confidence</span>
+      </div>
+    </div>
+    <h2 class="section-title">Confirm condition</h2>
+    <p class="section-sub" style="margin-bottom:20px;">Four quick questions. Each one adjusts the price.</p>
+    <div class="cond-group">
+      <label class="cond-lbl">Original box?</label>
+      <div class="tog-row">
+        <button class="tog on" data-g="box" data-v="true">Yes</button>
+        <button class="tog" data-g="box" data-v="false">No</button>
+      </div>
+    </div>
+    <div class="cond-group">
+      <label class="cond-lbl">Original papers?</label>
+      <div class="tog-row">
+        <button class="tog on" data-g="papers" data-v="true">Yes</button>
+        <button class="tog" data-g="papers" data-v="false">No</button>
+      </div>
+    </div>
+    <div class="cond-group">
+      <label class="cond-lbl">Approximate year</label>
+      <input class="year-inp" type="number" id="yr" placeholder="e.g. 2021" min="1950" max="2026" />
+    </div>
+    <div class="cond-group">
+      <label class="cond-lbl">Condition grade</label>
+      <div class="grade-grid">
+        <button class="grade-btn on" data-g="grade" data-v="mint">Mint</button>
+        <button class="grade-btn" data-g="grade" data-v="very_good">Very good</button>
+        <button class="grade-btn" data-g="grade" data-v="good">Good</button>
+        <button class="grade-btn" data-g="grade" data-v="fair">Fair</button>
+      </div>
+    </div>
+    <div class="err-box" id="err2">Something went wrong. Please try again.</div>
+    <button class="btn-main" id="btn-price">Get dealer price</button>
+  </div>
+
+  <!-- STEP 3: RESULT -->
+  <div class="panel" id="panel-result">
+    <p class="r-name" id="r-name"></p>
+    <p class="r-ref" id="r-ref"></p>
+
+    <div class="r-main">
+      <div class="rn"><p class="rn-lbl">Buy up to</p><p class="rn-val" id="r-buy">-</p></div>
+      <div class="rn"><p class="rn-lbl">Sell for</p><p class="rn-val blu" id="r-sell">-</p></div>
+      <div class="rn"><p class="rn-lbl">Margin</p><p class="rn-val grn" id="r-margin">-</p></div>
+    </div>
+
+    <div class="r-range">
+      <div class="r-range-row">
+        <div class="r-range-item"><p class="r-range-lbl">Market low</p><p class="r-range-val" id="r-low">-</p></div>
+        <div class="r-range-item" style="text-align:center;"><p class="r-range-lbl">Dealer buy</p><p class="r-range-val" id="r-buy2">-</p></div>
+        <div class="r-range-item" style="text-align:right;"><p class="r-range-lbl">Market high</p><p class="r-range-val" id="r-high">-</p></div>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-bar-fill" id="r-bar-fill" style="left:0%;width:100%;opacity:.15;background:var(--blue);"></div>
+        <div class="range-bar-dot" id="r-bar-dot" style="left:40%;"></div>
+      </div>
+    </div>
+
+    <div class="r-meta">
+      <div class="r-verdict vgood" id="r-verdict">Good buy</div>
+      <div class="r-trend tup" id="r-trend">- this week</div>
+    </div>
+    <p class="r-reason" id="r-reason"></p>
+
+    <p class="section-lbl">Price by region</p>
+    <div class="regions">
+      <div class="reg">
+        <p class="reg-flag">🇪🇺</p>
+        <p class="reg-name">Europe</p>
+        <div class="reg-row"><span class="reg-key">Buy up to</span><span class="reg-val" id="reg-eu-buy">-</span></div>
+        <div class="reg-row"><span class="reg-key">Sell for</span><span class="reg-val" id="reg-eu-sell">-</span></div>
+        <p class="reg-note" id="reg-eu-note"></p>
+      </div>
+      <div class="reg">
+        <p class="reg-flag">🇺🇸</p>
+        <p class="reg-name">North America</p>
+        <div class="reg-row"><span class="reg-key">Buy up to</span><span class="reg-val" id="reg-us-buy">-</span></div>
+        <div class="reg-row"><span class="reg-key">Sell for</span><span class="reg-val" id="reg-us-sell">-</span></div>
+        <p class="reg-note" id="reg-us-note"></p>
+      </div>
+      <div class="reg">
+        <p class="reg-flag">🌏</p>
+        <p class="reg-name">Asia</p>
+        <div class="reg-row"><span class="reg-key">Buy up to</span><span class="reg-val" id="reg-as-buy">-</span></div>
+        <div class="reg-row"><span class="reg-key">Sell for</span><span class="reg-val" id="reg-as-sell">-</span></div>
+        <p class="reg-note" id="reg-as-note"></p>
+      </div>
+    </div>
+
+    <p class="section-lbl">18-month price history</p>
+    <div class="chart-wrap">
+      <div class="chart-header">
+        <span class="chart-title" id="chart-title">Dealer buy price trend</span>
+        <span class="chart-subtitle" id="chart-sub">Jan 2024 - Jun 2025</span>
+      </div>
+      <div class="chart-canvas-wrap">
+        <canvas id="price-chart" role="img" aria-label="18-month price history chart"></canvas>
+      </div>
+    </div>
+
+    <div class="r-extra">
+      <div class="rx">
+        <p class="rx-lbl">Best platform to sell</p>
+        <p class="rx-val" id="r-platform">-</p>
+        <p class="rx-sub" id="r-platform-note"></p>
+      </div>
+      <div class="rx">
+        <p class="rx-lbl">vs Retail price</p>
+        <p class="rx-val" id="r-vs-retail">-</p>
+        <p class="rx-sub" id="r-retail-note"></p>
+      </div>
+      <div class="rx">
+        <p class="rx-lbl">30-day trend</p>
+        <p class="rx-val" id="r-30d">-</p>
+        <p class="rx-sub" id="r-margin-pct"></p>
+      </div>
+      <div class="rx">
+        <p class="rx-lbl">Active listings</p>
+        <p class="rx-val" id="r-listings">-</p>
+        <p class="rx-sub">Chrono24 right now</p>
+      </div>
+    </div>
+
+    <p class="r-source"><span class="s-dot" id="s-dot"></span><span id="s-text">Based on AI market estimate</span></p>
+
+    <div class="locked-banner">
+      <h3>Dealer street price locked</h3>
+      <p>The prices above use public market data. Real dealer-to-dealer prices from closed Telegram groups are available on Dealer Pro.</p>
+      <a class="btn-unlock" href="/#pricing">Unlock with Dealer Pro - EUR 79/mo</a>
+    </div>
+
+    <div class="r-actions">
+      <button class="btn-new" id="btn-new">Analyse another watch</button>
+      <a class="btn-see" href="/#pricing">See Dealer Pro</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const S = { b64: null, url: null, watch: null, cond: { box: true, papers: true, year: null, grade: 'mint' } }
+  let priceChart = null
+
+  const fmt = n => n ? 'EUR ' + Math.round(n).toLocaleString('en') : '-'
+  const fmtPct = n => n != null ? ((n > 0 ? '+' : '') + Number(n).toFixed(1) + '%') : '-'
+
+  function show(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+    document.getElementById('panel-' + id).classList.add('active')
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const d = document.getElementById('d' + i)
+      const l = document.getElementById('l' + i)
+      d.classList.remove('active','done')
+      l.classList.remove('active')
+      if (i < n) { d.classList.add('done'); d.textContent = '\u2713' }
+      else if (i === n) { d.classList.add('active'); d.textContent = i; l.classList.add('active') }
+      else { d.textContent = i }
+    }
+  }
+
+  function resetLS() {
+    ['ls1','ls2','ls3'].forEach(id => { const el = document.getElementById(id); el.classList.remove('active','done') })
+    document.getElementById('ls1').classList.add('active')
+  }
+
+  function animLS() {
+    const ids = ['ls1','ls2','ls3']; let i = 0
+    const iv = setInterval(() => {
+      if (i > 0) { const el = document.getElementById(ids[i-1]); el.classList.remove('active'); el.classList.add('done') }
+      if (i < ids.length) { document.getElementById(ids[i]).classList.add('active'); i++ }
+      else clearInterval(iv)
+    }, 2800)
+    return iv
+  }
+
+  // Upload
+  const dz = document.getElementById('dropzone')
+  const fi = document.getElementById('fi')
+  const pi = document.getElementById('prev-img')
+  const dze = document.getElementById('dz-empty')
+  const dzp = document.getElementById('dz-prev')
+  const btnId = document.getElementById('btn-id')
+
+  function handleFile(f) {
+    if (!f || !f.type.startsWith('image/')) return
+    const r = new FileReader()
+    r.onload = e => {
+      S.url = e.target.result; S.b64 = S.url.split(',')[1]
+      pi.src = S.url; dze.style.display = 'none'; dzp.style.display = 'block'
+      fi.style.display = 'none'; btnId.disabled = false
+    }
+    r.readAsDataURL(f)
+  }
+
+  fi.addEventListener('change', e => handleFile(e.target.files[0]))
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over') })
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'))
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); handleFile(e.dataTransfer.files[0]) })
+  document.getElementById('dz-rm').addEventListener('click', e => {
+    e.stopPropagation()
+    S.b64 = S.url = null; pi.src = ''; dze.style.display = 'block'; dzp.style.display = 'none'
+    fi.style.display = ''; fi.value = ''; btnId.disabled = true
+  })
+
+  btnId.addEventListener('click', async () => {
+    document.getElementById('err1').style.display = 'none'
+    resetLS(); document.getElementById('lt').textContent = 'Analysing photo...'
+    document.getElementById('ls-sub').textContent = 'This takes about 10 seconds'
+    show('loading'); const iv = animLS()
+    try {
+      const res = await fetch('/api/identify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: S.b64 }) })
+      clearInterval(iv)
+      const data = await res.json()
+      if (!res.ok || !data.watch) throw new Error()
+      S.watch = data.watch; fillCond(); setStep(2); show('condition')
+    } catch { clearInterval(iv); show('upload'); document.getElementById('err1').style.display = 'block' }
+  })
+
+  function fillCond() {
+    const w = S.watch
+    document.getElementById('id-img').src = S.url
+    document.getElementById('id-name').textContent = w.brand + ' ' + w.model
+    document.getElementById('id-ref').textContent = [w.reference, w.year_range, w.dial_color].filter(Boolean).join(' / ')
+    document.getElementById('id-tags').innerHTML = [w.case_material, w.notes].filter(Boolean).map(t => `<span class="id-tag">${t}</span>`).join('')
+    const c = document.getElementById('id-conf')
+    const cl = { high: 'chigh', medium: 'cmed', low: 'clow' }
+    c.className = 'id-conf ' + (cl[w.confidence] || 'cmed')
+    c.textContent = (w.confidence || 'medium').charAt(0).toUpperCase() + (w.confidence || 'medium').slice(1) + ' confidence'
+  }
+
+  document.querySelectorAll('.tog, .grade-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const g = b.dataset.g
+      document.querySelectorAll(`[data-g="${g}"]`).forEach(x => x.classList.remove('on'))
+      b.classList.add('on')
+      if (g === 'grade') S.cond.grade = b.dataset.v
+      else S.cond[g] = b.dataset.v === 'true'
+    })
+  })
+
+  document.getElementById('btn-price').addEventListener('click', async () => {
+    const y = document.getElementById('yr').value
+    S.cond.year = y ? parseInt(y) : null
+    document.getElementById('err2').style.display = 'none'
+    resetLS(); document.getElementById('lt').textContent = 'Getting dealer price...'
+    document.getElementById('ls-sub').textContent = 'Checking regional market data'
+    show('loading')
+    try {
+      const res = await fetch('/api/price', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brand: S.watch.brand, model: S.watch.model, reference: S.watch.reference, condition: S.cond }) })
+      const data = await res.json()
+      if (!res.ok || !data.pricing) throw new Error()
+      fillResult(data.pricing); setStep(3); show('result')
+    } catch { show('condition'); document.getElementById('err2').style.display = 'block' }
+  })
+
+  function fillResult(p) {
+    const w = S.watch
+    document.getElementById('r-name').textContent = w.brand + ' ' + w.model
+    document.getElementById('r-ref').textContent = [w.reference, S.cond.year].filter(Boolean).join(' / ')
+
+    document.getElementById('r-buy').textContent = fmt(p.dealer_buy_price)
+    document.getElementById('r-sell').textContent = fmt(p.dealer_sell_price)
+    document.getElementById('r-margin').textContent = fmt(p.margin)
+    document.getElementById('r-buy2').textContent = fmt(p.dealer_buy_price)
+    document.getElementById('r-low').textContent = fmt(p.price_min)
+    document.getElementById('r-high').textContent = fmt(p.price_max)
+
+    // Range bar position
+    if (p.price_min && p.price_max && p.dealer_buy_price) {
+      const range = p.price_max - p.price_min
+      const pct = range > 0 ? Math.round(((p.dealer_buy_price - p.price_min) / range) * 100) : 40
+      document.getElementById('r-bar-dot').style.left = Math.min(95, Math.max(5, pct)) + '%'
+      document.getElementById('r-bar-fill').style.opacity = '1'
+    }
+
+    const vEl = document.getElementById('r-verdict')
+    vEl.textContent = p.verdict === 'good_buy' ? 'Good buy' : p.verdict === 'fair' ? 'Fair price' : 'Overpriced'
+    vEl.className = 'r-verdict ' + (p.verdict === 'good_buy' ? 'vgood' : p.verdict === 'fair' ? 'vfair' : 'vhigh')
+
+    const tEl = document.getElementById('r-trend')
+    tEl.textContent = fmtPct(p.trend_pct) + ' this week'
+    tEl.className = 'r-trend ' + (p.trend === 'up' ? 'tup' : p.trend === 'down' ? 'tdown' : 'tstable')
+
+    if (p.verdict_reason) document.getElementById('r-reason').textContent = p.verdict_reason
+
+    // Regions
+    if (p.regions) {
+      const eu = p.regions.europe || {}
+      const us = p.regions.north_america || {}
+      const as = p.regions.asia || {}
+      document.getElementById('reg-eu-buy').textContent = fmt(eu.buy)
+      document.getElementById('reg-eu-sell').textContent = fmt(eu.sell)
+      document.getElementById('reg-eu-note').textContent = eu.note || ''
+      document.getElementById('reg-us-buy').textContent = fmt(us.buy)
+      document.getElementById('reg-us-sell').textContent = fmt(us.sell)
+      document.getElementById('reg-us-note').textContent = us.note || ''
+      document.getElementById('reg-as-buy').textContent = fmt(as.buy)
+      document.getElementById('reg-as-sell').textContent = fmt(as.sell)
+      document.getElementById('reg-as-note').textContent = as.note || ''
+    }
+
+    // Chart
+    if (p.price_history && p.price_history.length > 0) {
+      const labels = p.price_history.map(d => d.month)
+      const vals = p.price_history.map(d => Math.round(d.price))
+      const isDark = matchMedia('(prefers-color-scheme: dark)').matches
+      const lineColor = '#2563EB'
+      const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
+      const tickColor = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'
+
+      if (priceChart) { priceChart.destroy() }
+      const ctx = document.getElementById('price-chart')
+      priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: vals,
+            borderColor: lineColor,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: lineColor,
+            fill: true,
+            backgroundColor: 'rgba(37,99,235,0.06)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: c => ' EUR ' + c.parsed.y.toLocaleString('en')
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: tickColor, font: { size: 11, family: 'Inter' }, maxRotation: 0, autoSkip: true, maxTicksLimit: 9 },
+              grid: { display: false }
+            },
+            y: {
+              ticks: {
+                color: tickColor, font: { size: 11, family: 'Inter' },
+                callback: v => 'EUR ' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v)
+              },
+              grid: { color: gridColor }
+            }
+          }
+        }
+      })
+    }
+
+    // Extras
+    document.getElementById('r-platform').textContent = p.best_platform || '-'
+    document.getElementById('r-platform-note').textContent = p.best_platform_reason || ''
+    if (p.retail_price && p.discount_vs_retail) {
+      document.getElementById('r-vs-retail').textContent = fmtPct(-p.discount_vs_retail) + ' below retail'
+      document.getElementById('r-retail-note').textContent = fmt(p.retail_price) + ' new'
+    }
+    const t30 = document.getElementById('r-30d')
+    t30.textContent = p.trend_30d === 'up' ? 'Rising' : p.trend_30d === 'down' ? 'Falling' : 'Stable'
+    t30.className = 'rx-val ' + (p.trend_30d === 'up' ? 'tup' : p.trend_30d === 'down' ? 'tdown' : 'tstable')
+    document.getElementById('r-margin-pct').textContent = p.margin_pct ? fmtPct(p.margin_pct) + ' margin' : ''
+    document.getElementById('r-listings').textContent = p.active_listings ? p.active_listings + ' active' : '-'
+
+    const live = p.data_source === 'chrono24_live'
+    document.getElementById('s-dot').className = 's-dot' + (live ? ' live' : '')
+    document.getElementById('s-text').textContent = live ? 'Based on real Chrono24 transaction data' : 'AI estimate based on market training data'
+  }
+
+  document.getElementById('btn-new').addEventListener('click', () => {
+    S.b64 = S.url = S.watch = null
+    S.cond = { box: true, papers: true, year: null, grade: 'mint' }
+    pi.src = ''; dze.style.display = 'block'; dzp.style.display = 'none'
+    fi.style.display = ''; fi.value = ''; btnId.disabled = true
+    document.getElementById('yr').value = ''
+    document.querySelectorAll('[data-g="box"]')[0].classList.add('on')
+    document.querySelectorAll('[data-g="box"]')[1].classList.remove('on')
+    document.querySelectorAll('[data-g="papers"]')[0].classList.add('on')
+    document.querySelectorAll('[data-g="papers"]')[1].classList.remove('on')
+    document.querySelectorAll('[data-g="grade"]').forEach((b,i) => i===0 ? b.classList.add('on') : b.classList.remove('on'))
+    setStep(1); show('upload')
+  })
+</script>
+</body>
+</html>
