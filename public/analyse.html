@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyse a Watch — DialIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAFA; --bg-card: #F4F4F5; --bg-dark: #18181B;
+      --border: #E4E4E7; --text: #18181B; --text-2: #71717A;
+      --text-3: #A1A1AA; --blue: #2563EB; --blue-light: #EFF6FF;
+      --green: #16A34A; --green-light: #DCFCE7; --red: #DC2626;
+      --amber: #D97706; --white: #FFFFFF; --r: 10px; --r-lg: 16px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.6; min-height: 100vh; }
+
+    /* NAV */
+    nav { background: rgba(250,250,250,.94); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); height: 58px; display: flex; align-items: center; padding: 0 32px; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -.03em; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-back { font-size: 14px; font-weight: 500; color: var(--text-2); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color .15s; }
+    .nav-back:hover { color: var(--text); }
+
+    /* LAYOUT */
+    .page { max-width: 640px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* STEP INDICATOR */
+    .steps { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
+    .step-item { display: flex; align-items: center; gap: 8px; }
+    .step-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; border: 1.5px solid var(--border); color: var(--text-3); background: var(--white); transition: all .2s; flex-shrink: 0; }
+    .step-dot.active { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .step-dot.done { border-color: var(--green); color: var(--white); background: var(--green); }
+    .step-label { font-size: 12px; font-weight: 500; color: var(--text-3); transition: color .2s; }
+    .step-label.active { color: var(--text); }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
+
+    /* PANELS */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* UPLOAD ZONE */
+    .upload-title { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 8px; }
+    .upload-sub { font-size: 15px; color: var(--text-2); margin-bottom: 28px; line-height: 1.6; }
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: var(--r-lg);
+      padding: 48px 24px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s; background: var(--white);
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--blue); background: var(--blue-light); }
+    .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .dropzone-icon { font-size: 40px; margin-bottom: 14px; color: var(--text-3); line-height: 1; }
+    .dropzone-text { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .dropzone-sub { font-size: 13px; color: var(--text-3); }
+    .dropzone-preview { display: none; position: relative; }
+    .dropzone-preview img { width: 100%; max-height: 320px; object-fit: contain; border-radius: var(--r); }
+    .dropzone-preview .remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .btn-analyse { display: block; width: 100%; background: var(--bg-dark); color: var(--white); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; border-radius: var(--r); border: none; cursor: pointer; margin-top: 16px; transition: opacity .15s; letter-spacing: -.01em; }
+    .btn-analyse:hover { opacity: .82; }
+    .btn-analyse:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* LOADING */
+    .loading-wrap { text-align: center; padding: 48px 0; }
+    .spinner { width: 40px; height: 40px; border: 2.5px solid var(--border); border-top-color: var(--bg-dark); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 8px; }
+    .loading-sub { font-size: 14px; color: var(--text-2); }
+    .loading-steps { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; max-width: 280px; margin-left: auto; margin-right: auto; }
+    .loading-step { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-3); }
+    .loading-step.done { color: var(--green); }
+    .loading-step.active { color: var(--text); font-weight: 500; }
+    .lstep-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background .2s; }
+    .loading-step.done .lstep-dot { background: var(--green); }
+    .loading-step.active .lstep-dot { background: var(--text); }
+
+    /* IDENTIFICATION RESULT */
+    .id-title { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 8px; }
+    .id-sub { font-size: 15px; color: var(--text-2); margin-bottom: 24px; }
+    .id-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 24px; }
+    .id-card-img { width: 100%; height: 200px; object-fit: cover; display: block; background: var(--bg-card); }
+    .id-card-body { padding: 18px 20px; }
+    .id-watch-name { font-size: 18px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 4px; }
+    .id-watch-ref { font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
+    .id-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .id-tag { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: var(--bg-card); color: var(--text-2); border: .5px solid var(--border); }
+    .id-confidence { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+    .id-confidence.high { color: var(--green); }
+    .id-confidence.medium { color: var(--amber); }
+    .id-confidence.low { color: var(--red); }
+    .id-confidence::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* CONDITION FORM */
+    .condition-title { font-size: 22px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 8px; }
+    .condition-sub { font-size: 15px; color: var(--text-2); margin-bottom: 28px; }
+    .condition-group { margin-bottom: 20px; }
+    .condition-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; display: block; letter-spacing: -.01em; }
+    .toggle-row { display: flex; gap: 8px; }
+    .toggle-btn { flex: 1; padding: 10px; border-radius: var(--r); border: 1.5px solid var(--border); background: var(--white); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all .15s; text-align: center; }
+    .toggle-btn.selected { border-color: var(--bg-dark); background: var(--bg-dark); color: var(--white); }
+    .grade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .grade-btn { padding: 10px 8px; border-radius: var(--r); border: 1.5px solid var(--border); background: var(--white); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all .15s; text-align: center; }
+    .grade-btn.selected { border-color: var(--bg-dark); background: var(--bg-dark); color: var(--white); }
+    .year-input { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; padding: 11px 14px; border-radius: var(--r); border: 1.5px solid var(--border); color: var(--text); background: var(--white); outline: none; transition: border-color .15s; }
+    .year-input:focus { border-color: var(--blue); }
+    .btn-getprice { display: block; width: 100%; background: var(--bg-dark); color: var(--white); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; border-radius: var(--r); border: none; cursor: pointer; margin-top: 8px; transition: opacity .15s; letter-spacing: -.01em; }
+    .btn-getprice:hover { opacity: .82; }
+
+    /* RESULT */
+    .result-header { margin-bottom: 20px; }
+    .result-watch-name { font-size: 20px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 4px; }
+    .result-watch-ref { font-size: 13px; color: var(--text-2); }
+    .result-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 16px; }
+    .rnum { background: var(--white); padding: 20px 18px; }
+    .rnum-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); margin-bottom: 6px; }
+    .rnum-value { font-size: 24px; font-weight: 700; letter-spacing: -.03em; color: var(--text); }
+    .rnum-value.green { color: var(--green); }
+    .rnum-value.blue { color: var(--blue); }
+    .result-meta { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .result-verdict { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 999px; }
+    .verdict-good { background: var(--green-light); color: var(--green); }
+    .verdict-fair { background: #FEF9C3; color: #854D0E; }
+    .verdict-high { background: #FEE2E2; color: var(--red); }
+    .verdict-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .result-trend { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .trend-up { color: var(--green); }
+    .trend-down { color: var(--red); }
+    .trend-stable { color: var(--text-2); }
+    .result-reason { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 20px; padding: 14px 16px; background: var(--bg-card); border-radius: var(--r); }
+    .result-datapoints { font-size: 12px; color: var(--text-3); margin-bottom: 24px; }
+    .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-new { background: var(--bg-dark); color: var(--white); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 13px; border-radius: var(--r); border: none; cursor: pointer; transition: opacity .15s; letter-spacing: -.01em; }
+    .btn-new:hover { opacity: .82; }
+    .btn-upgrade { background: transparent; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 13px; border-radius: var(--r); border: 1.5px solid var(--border); cursor: pointer; transition: background .15s; letter-spacing: -.01em; text-decoration: none; display: block; text-align: center; }
+    .btn-upgrade:hover { background: var(--bg-card); }
+
+    /* LOCKED OVERLAY */
+    .locked-overlay { background: linear-gradient(to bottom, transparent 0%, var(--bg) 60%); position: absolute; bottom: 0; left: 0; right: 0; height: 200px; display: flex; align-items: flex-end; padding-bottom: 20px; justify-content: center; pointer-events: none; }
+    .result-wrap { position: relative; }
+    .locked-banner { background: var(--bg-dark); color: var(--white); border-radius: var(--r-lg); padding: 20px 24px; text-align: center; margin-bottom: 24px; }
+    .locked-banner h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; letter-spacing: -.01em; }
+    .locked-banner p { font-size: 13px; color: #A1A1AA; margin-bottom: 16px; line-height: 1.5; }
+    .btn-unlock { display: block; background: var(--white); color: var(--bg-dark); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; padding: 12px; border-radius: var(--r); border: none; cursor: pointer; text-decoration: none; transition: opacity .15s; }
+    .btn-unlock:hover { opacity: .88; }
+
+    /* ERROR */
+    .error-box { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--r); padding: 14px 16px; font-size: 14px; color: var(--red); margin-bottom: 16px; display: none; }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .page { padding: 32px 16px 60px; }
+      .result-numbers { grid-template-columns: 1fr 1fr; }
+      .rnum:last-child { grid-column: span 2; }
+      .grade-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">Dial<span>IQ</span></a>
+  <a class="nav-back" href="/">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back
+  </a>
+</nav>
+
+<div class="page">
+
+  <!-- STEP INDICATOR -->
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-dot active" id="dot-1">1</div>
+      <span class="step-label active" id="label-1">Photo</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-2">2</div>
+      <span class="step-label" id="label-2">Condition</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-3">3</div>
+      <span class="step-label" id="label-3">Price</span>
+    </div>
+  </div>
+
+  <!-- PANEL 1: UPLOAD -->
+  <div class="panel active" id="panel-upload">
+    <h1 class="upload-title">Photograph the watch</h1>
+    <p class="upload-sub">Upload a clear photo of the dial. The AI will identify the brand, model, and exact reference automatically.</p>
+
+    <div class="dropzone" id="dropzone">
+      <input type="file" accept="image/*" id="file-input" />
+      <div id="dropzone-empty">
+        <div class="dropzone-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="8" fill="#F4F4F5"/>
+            <path d="M13 27l5-5 3 3 4-5 5 7H13z" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="16" cy="18" r="2" stroke="#A1A1AA" stroke-width="1.5"/>
+            <path d="M20 12v-3m0 0l-2 2m2-2l2 2" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="dropzone-text">Drop photo here or click to upload</p>
+        <p class="dropzone-sub">JPG, PNG, HEIC up to 10MB</p>
+      </div>
+      <div class="dropzone-preview" id="dropzone-preview">
+        <img id="preview-img" src="" alt="Watch preview" />
+        <button class="remove-btn" id="remove-btn" type="button">&#x2715;</button>
+      </div>
+    </div>
+
+    <div class="error-box" id="upload-error">Could not read the image. Please try another photo.</div>
+    <button class="btn-analyse" id="btn-analyse" disabled>Identify watch</button>
+  </div>
+
+  <!-- PANEL: LOADING -->
+  <div class="panel" id="panel-loading">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <p class="loading-title" id="loading-title">Analysing photo...</p>
+      <p class="loading-sub" id="loading-sub">This takes about 10 seconds</p>
+      <div class="loading-steps">
+        <div class="loading-step active" id="lstep-1">
+          <span class="lstep-dot"></span>
+          Reading image details
+        </div>
+        <div class="loading-step" id="lstep-2">
+          <span class="lstep-dot"></span>
+          Identifying reference
+        </div>
+        <div class="loading-step" id="lstep-3">
+          <span class="lstep-dot"></span>
+          Checking dealer market
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CONDITION -->
+  <div class="panel" id="panel-condition">
+    <div class="id-card" id="id-result-card">
+      <img class="id-card-img" id="id-photo" src="" alt="Watch" />
+      <div class="id-card-body">
+        <p class="id-watch-name" id="id-name">Loading...</p>
+        <p class="id-watch-ref" id="id-ref"></p>
+        <div class="id-tags" id="id-tags"></div>
+        <div class="id-confidence high" id="id-confidence">High confidence</div>
+      </div>
+    </div>
+
+    <h2 class="condition-title">Confirm condition</h2>
+    <p class="condition-sub">Four quick questions. The price changes with each one.</p>
+
+    <div class="condition-group">
+      <label class="condition-label">Original box?</label>
+      <div class="toggle-row">
+        <button class="toggle-btn selected" data-group="box" data-value="true">Yes</button>
+        <button class="toggle-btn" data-group="box" data-value="false">No</button>
+      </div>
+    </div>
+
+    <div class="condition-group">
+      <label class="condition-label">Original papers?</label>
+      <div class="toggle-row">
+        <button class="toggle-btn selected" data-group="papers" data-value="true">Yes</button>
+        <button class="toggle-btn" data-group="papers" data-value="false">No</button>
+      </div>
+    </div>
+
+    <div class="condition-group">
+      <label class="condition-label">Approximate year</label>
+      <input class="year-input" type="number" id="year-input" placeholder="e.g. 2021" min="1950" max="2026" />
+    </div>
+
+    <div class="condition-group">
+      <label class="condition-label">Condition grade</label>
+      <div class="grade-grid">
+        <button class="grade-btn selected" data-group="grade" data-value="mint">Mint</button>
+        <button class="grade-btn" data-group="grade" data-value="very_good">Very good</button>
+        <button class="grade-btn" data-group="grade" data-value="good">Good</button>
+        <button class="grade-btn" data-group="grade" data-value="fair">Fair</button>
+      </div>
+    </div>
+
+    <div class="error-box" id="condition-error">Something went wrong. Please try again.</div>
+    <button class="btn-getprice" id="btn-getprice">Get dealer price</button>
+  </div>
+
+  <!-- PANEL 3: RESULT -->
+  <div class="panel" id="panel-result">
+    <div class="result-header">
+      <p class="result-watch-name" id="result-name"></p>
+      <p class="result-watch-ref" id="result-ref"></p>
+    </div>
+
+    <div class="result-numbers">
+      <div class="rnum">
+        <p class="rnum-label">Buy up to</p>
+        <p class="rnum-value" id="result-buy">—</p>
+      </div>
+      <div class="rnum">
+        <p class="rnum-label">Sell for</p>
+        <p class="rnum-value blue" id="result-sell">—</p>
+      </div>
+      <div class="rnum">
+        <p class="rnum-label">Margin</p>
+        <p class="rnum-value green" id="result-margin">—</p>
+      </div>
+    </div>
+
+    <div class="result-meta">
+      <div class="result-verdict verdict-good" id="result-verdict">Good buy</div>
+      <div class="result-trend trend-up" id="result-trend">— this week</div>
+    </div>
+
+    <p class="result-reason" id="result-reason"></p>
+    <p class="result-datapoints" id="result-datapoints"></p>
+
+    <!-- LOCKED DEALER PRICE BANNER (shown for free users) -->
+    <div class="locked-banner" id="locked-banner">
+      <h3>Dealer street price locked</h3>
+      <p>The price above is the official market price. The actual dealer street price — what dealers pay in closed groups — is available on Dealer Pro.</p>
+      <a class="btn-unlock" href="/#pricing">Unlock with Dealer Pro — €79/mo</a>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-new" id="btn-new">Analyse another watch</button>
+      <a class="btn-upgrade" href="/#pricing">See Dealer Pro</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const state = {
+    imageBase64: null,
+    imageDataUrl: null,
+    watch: null,
+    condition: { box: true, papers: true, year: null, grade: 'mint' }
+  }
+
+  function fmt(n) {
+    if (!n) return '—'
+    return '€' + Math.round(n).toLocaleString('en-EU')
+  }
+
+  function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+    document.getElementById('panel-' + id).classList.add('active')
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('dot-' + i)
+      const label = document.getElementById('label-' + i)
+      dot.classList.remove('active', 'done')
+      label.classList.remove('active')
+      if (i < n) { dot.classList.add('done'); dot.textContent = '✓' }
+      else if (i === n) { dot.classList.add('active'); dot.textContent = i; label.classList.add('active') }
+      else { dot.textContent = i }
+    }
+  }
+
+  // FILE UPLOAD
+  const dropzone = document.getElementById('dropzone')
+  const fileInput = document.getElementById('file-input')
+  const previewImg = document.getElementById('preview-img')
+  const dropzoneEmpty = document.getElementById('dropzone-empty')
+  const dropzonePreview = document.getElementById('dropzone-preview')
+  const btnAnalyse = document.getElementById('btn-analyse')
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target.result
+      state.imageDataUrl = dataUrl
+      state.imageBase64 = dataUrl.split(',')[1]
+      previewImg.src = dataUrl
+      dropzoneEmpty.style.display = 'none'
+      dropzonePreview.style.display = 'block'
+      fileInput.style.display = 'none'
+      btnAnalyse.disabled = false
+    }
+    reader.readAsDataURL(file)
+  }
+
+  fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]))
+
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover') })
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'))
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault()
+    dropzone.classList.remove('dragover')
+    handleFile(e.dataTransfer.files[0])
+  })
+
+  document.getElementById('remove-btn').addEventListener('click', (e) => {
+    e.stopPropagation()
+    state.imageBase64 = null
+    state.imageDataUrl = null
+    previewImg.src = ''
+    dropzoneEmpty.style.display = 'block'
+    dropzonePreview.style.display = 'none'
+    fileInput.style.display = ''
+    fileInput.value = ''
+    btnAnalyse.disabled = true
+  })
+
+  // LOADING ANIMATION
+  function animateLoadingSteps() {
+    const steps = ['lstep-1', 'lstep-2', 'lstep-3']
+    let i = 0
+    const interval = setInterval(() => {
+      if (i > 0) document.getElementById(steps[i-1]).classList.replace('active', 'done')
+      if (i < steps.length) {
+        document.getElementById(steps[i]).classList.add('active')
+        i++
+      } else {
+        clearInterval(interval)
+      }
+    }, 2500)
+    return interval
+  }
+
+  // STEP 1: IDENTIFY
+  btnAnalyse.addEventListener('click', async () => {
+    if (!state.imageBase64) return
+    document.getElementById('upload-error').style.display = 'none'
+    showPanel('loading')
+    const interval = animateLoadingSteps()
+
+    try {
+      const res = await fetch('/api/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: state.imageBase64 })
+      })
+      clearInterval(interval)
+      const data = await res.json()
+      if (!res.ok || !data.watch) throw new Error()
+
+      state.watch = data.watch
+      populateConditionPanel()
+      setStep(2)
+      showPanel('condition')
+
+    } catch {
+      clearInterval(interval)
+      showPanel('upload')
+      document.getElementById('upload-error').style.display = 'block'
+    }
+  })
+
+  function populateConditionPanel() {
+    const w = state.watch
+    document.getElementById('id-photo').src = state.imageDataUrl
+    document.getElementById('id-name').textContent = `${w.brand} ${w.model}`
+    document.getElementById('id-ref').textContent = [w.reference, w.year_range, w.dial_color].filter(Boolean).join(' · ')
+
+    const tags = []
+    if (w.case_material) tags.push(w.case_material)
+    if (w.notes) tags.push(w.notes)
+    document.getElementById('id-tags').innerHTML = tags.map(t => `<span class="id-tag">${t}</span>`).join('')
+
+    const conf = document.getElementById('id-confidence')
+    conf.className = `id-confidence ${w.confidence}`
+    conf.textContent = `${w.confidence.charAt(0).toUpperCase() + w.confidence.slice(1)} confidence`
+  }
+
+  // TOGGLE BUTTONS
+  document.querySelectorAll('.toggle-btn, .grade-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group
+      document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('selected'))
+      btn.classList.add('selected')
+      if (group === 'grade') state.condition.grade = btn.dataset.value
+      else state.condition[group] = btn.dataset.value === 'true'
+    })
+  })
+
+  // STEP 2: GET PRICE
+  document.getElementById('btn-getprice').addEventListener('click', async () => {
+    const yearVal = document.getElementById('year-input').value
+    state.condition.year = yearVal ? parseInt(yearVal) : null
+    document.getElementById('condition-error').style.display = 'none'
+
+    document.getElementById('loading-title').textContent = 'Getting dealer price...'
+    document.getElementById('loading-sub').textContent = 'Checking real transaction data'
+    document.getElementById('lstep-1').className = 'loading-step'
+    document.getElementById('lstep-2').className = 'loading-step'
+    document.getElementById('lstep-3').className = 'loading-step active'
+    showPanel('loading')
+
+    try {
+      const res = await fetch('/api/price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand: state.watch.brand,
+          model: state.watch.model,
+          reference: state.watch.reference,
+          condition: state.condition
+        })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.pricing) throw new Error()
+
+      populateResult(data.pricing)
+      setStep(3)
+      showPanel('result')
+
+    } catch {
+      showPanel('condition')
+      document.getElementById('condition-error').style.display = 'block'
+    }
+  })
+
+  function populateResult(p) {
+    const w = state.watch
+    document.getElementById('result-name').textContent = `${w.brand} ${w.model}`
+    document.getElementById('result-ref').textContent = [w.reference, state.condition.year].filter(Boolean).join(' · ')
+    document.getElementById('result-buy').textContent = fmt(p.dealer_buy_price)
+    document.getElementById('result-sell').textContent = fmt(p.dealer_sell_price)
+    document.getElementById('result-margin').textContent = fmt(p.margin)
+
+    const verdictEl = document.getElementById('result-verdict')
+    verdictEl.textContent = p.verdict === 'good_buy' ? 'Good buy' : p.verdict === 'fair' ? 'Fair price' : 'Overpriced'
+    verdictEl.className = 'result-verdict ' + (p.verdict === 'good_buy' ? 'verdict-good' : p.verdict === 'fair' ? 'verdict-fair' : 'verdict-high')
+
+    const trendEl = document.getElementById('result-trend')
+    const trendSign = p.trend_pct > 0 ? '+' : ''
+    trendEl.textContent = `${trendSign}${p.trend_pct?.toFixed(1)}% this week`
+    trendEl.className = 'result-trend ' + (p.trend === 'up' ? 'trend-up' : p.trend === 'down' ? 'trend-down' : 'trend-stable')
+
+    if (p.verdict_reason) document.getElementById('result-reason').textContent = p.verdict_reason
+    if (p.data_points) document.getElementById('result-datapoints').textContent = `Based on approximately ${p.data_points} recent dealer transactions`
+  }
+
+  // NEW ANALYSIS
+  document.getElementById('btn-new').addEventListener('click', () => {
+    state.imageBase64 = null
+    state.imageDataUrl = null
+    state.watch = null
+    state.condition = { box: true, papers: true, year: null, grade: 'mint' }
+    previewImg.src = ''
+    dropzoneEmpty.style.display = 'block'
+    dropzonePreview.style.display = 'none'
+    fileInput.style.display = ''
+    fileInput.value = ''
+    btnAnalyse.disabled = true
+    document.getElementById('year-input').value = ''
+    document.querySelectorAll('[data-group="box"]')[0].classList.add('selected')
+    document.querySelectorAll('[data-group="box"]')[1].classList.remove('selected')
+    document.querySelectorAll('[data-group="papers"]')[0].classList.add('selected')
+    document.querySelectorAll('[data-group="papers"]')[1].classList.remove('selected')
+    document.querySelectorAll('[data-group="grade"]').forEach((b, i) => i === 0 ? b.classList.add('selected') : b.classList.remove('selected'))
+    setStep(1)
+    showPanel('upload')
+  })
+</script>
+</body>
+</html>
