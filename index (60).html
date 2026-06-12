@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DialIQ — Real Dealer Prices for Luxury Watches</title>
+  <meta name="description" content="Photograph any luxury watch and get the actual price dealers are trading at right now. Not Chrono24 listings. Real dealer street prices from closed market data. Built for watch dealers." />
+  <meta name="keywords" content="watch dealer tool, luxury watch price, rolex dealer price, pre-owned watch valuation, watch market data, dealer street price" />
+  <meta property="og:title" content="DialIQ — Real Dealer Prices for Luxury Watches" />
+  <meta property="og:description" content="Photo to dealer price in 30 seconds. The actual price dealers trade at, not what Chrono24 lists." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAFA; --bg-card: #F4F4F5; --bg-dark: #18181B;
+      --border: #E4E4E7; --text: #18181B; --text-2: #71717A;
+      --text-3: #A1A1AA; --blue: #2563EB; --blue-light: #EFF6FF;
+      --green: #16A34A; --red: #DC2626; --white: #FFFFFF;
+      --r: 10px; --r-lg: 16px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; font-size: 16px; line-height: 1.6; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(250,250,250,.94); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); height: 58px; display: flex; align-items: center; padding: 0 32px; justify-content: space-between; }
+    .logo { font-size: 16px; font-weight: 700; letter-spacing: -.03em; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--blue); }
+    .nav-r { display: flex; align-items: center; gap: 28px; }
+    .nav-link { font-size: 14px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: color .15s; }
+    .nav-link:hover { color: var(--text); }
+    .btn-sm { background: var(--bg-dark); color: var(--white); font-size: 13px; font-weight: 600; letter-spacing: -.01em; padding: 8px 18px; border-radius: var(--r); border: none; cursor: pointer; text-decoration: none; transition: opacity .15s; }
+    .btn-sm:hover { opacity: .82; }
+
+    /* HERO */
+    .hero { max-width: 1120px; margin: 0 auto; padding: 80px 32px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); background: var(--blue-light); padding: 4px 12px; border-radius: 999px; margin-bottom: 24px; }
+    .hero-eyebrow::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--blue); }
+    .hero h1 { font-size: clamp(34px, 4vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1.07; margin-bottom: 20px; }
+    .hero h1 em { font-style: italic; font-weight: 400; color: var(--text-2); }
+    .hero-sub { font-size: 17px; color: var(--text-2); line-height: 1.7; max-width: 440px; margin-bottom: 32px; }
+
+    /* HERO SIGNUP FORM */
+    .hero-form { margin-bottom: 14px; }
+    .hero-form-inner { display: flex; gap: 8px; max-width: 420px; }
+    .hero-input {
+      flex: 1; font-family: 'Inter', sans-serif;
+      font-size: 14px; color: var(--text);
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 12px 16px;
+      outline: none; transition: border-color .15s;
+    }
+    .hero-input::placeholder { color: var(--text-3); }
+    .hero-input:focus { border-color: var(--blue); }
+    .btn-lg { background: var(--bg-dark); color: var(--white); font-size: 14px; font-weight: 600; letter-spacing: -.01em; padding: 12px 22px; border-radius: var(--r); border: none; cursor: pointer; text-decoration: none; white-space: nowrap; transition: opacity .15s; }
+    .btn-lg:hover { opacity: .82; }
+    .hero-note { font-size: 12px; color: var(--text-3); }
+
+    /* SOCIAL PROOF BAR */
+    .social-proof { max-width: 1120px; margin: 0 auto; padding: 28px 32px 0; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+    .sp-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+    .sp-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .sp-divider { width: 1px; height: 16px; background: var(--border); }
+
+    /* HERO RIGHT CARDS */
+    .watch-stack { display: flex; flex-direction: column; gap: 10px; }
+    .watch-row { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; display: flex; align-items: stretch; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .watch-img { width: 96px; min-height: 96px; object-fit: cover; flex-shrink: 0; background: var(--bg-card); }
+    .watch-info { padding: 14px 18px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .watch-name { font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: -.01em; }
+    .watch-ref { font-size: 12px; color: var(--text-3); }
+    .watch-prices { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
+    .watch-price-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); margin-bottom: 2px; }
+    .watch-price-value { font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: var(--text); }
+    .watch-price-value.green { color: var(--green); }
+    .watch-badge { align-self: center; margin-right: 16px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .badge-good { background: #DCFCE7; color: var(--green); }
+    .badge-ok   { background: #FEF9C3; color: #854D0E; }
+
+    /* BRANDS */
+    .brands { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 20px 32px; margin-top: 64px; }
+    .brands-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 0; }
+    .brands-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; margin-right: 40px; flex-shrink: 0; }
+    .brands-list { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
+    .brand-name { font-size: 13px; font-weight: 600; color: var(--text-3); letter-spacing: .02em; text-transform: uppercase; }
+
+    /* PROBLEM */
+    .problem { background: var(--bg-dark); padding: 88px 32px; }
+    .problem-inner { max-width: 1120px; margin: 0 auto; }
+    .problem-top { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-bottom: 64px; }
+    .problem-h { font-size: clamp(26px, 3.5vw, 38px); font-weight: 700; letter-spacing: -.03em; color: var(--white); line-height: 1.15; }
+    .problem-p { font-size: 16px; color: #71717A; line-height: 1.75; padding-top: 4px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #27272A; border-radius: var(--r-lg); overflow: hidden; }
+    .stat-box { background: #18181B; padding: 32px 28px; }
+    .stat-num { font-size: 42px; font-weight: 700; letter-spacing: -.04em; color: var(--white); line-height: 1; margin-bottom: 10px; }
+    .stat-num span { color: var(--blue); }
+    .stat-desc { font-size: 13px; color: #71717A; line-height: 1.6; }
+
+    /* HOW */
+    .how { max-width: 1120px; margin: 0 auto; padding: 88px 32px; }
+    .section-kicker { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+    .section-h { font-size: clamp(26px, 3.5vw, 38px); font-weight: 700; letter-spacing: -.03em; line-height: 1.15; margin-bottom: 12px; }
+    .section-sub { font-size: 16px; color: var(--text-2); max-width: 520px; line-height: 1.7; margin-bottom: 56px; }
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border-radius: var(--r-lg); overflow: hidden; }
+    .how-cell { background: var(--white); padding: 36px 32px; }
+    .how-n { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 24px; }
+    .how-cell h3 { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 10px; line-height: 1.3; }
+    .how-cell p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+    /* GALLERY */
+    .gallery { max-width: 1120px; margin: 0 auto; padding: 0 32px 88px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .gallery-card { border-radius: var(--r-lg); overflow: hidden; position: relative; aspect-ratio: 3/4; background: var(--bg-card); }
+    .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+    .gallery-card:hover img { transform: scale(1.04); }
+    .gallery-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,.72) 0%, transparent 100%); padding: 24px 16px 16px; }
+    .gallery-brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 3px; }
+    .gallery-model { font-size: 14px; font-weight: 600; color: var(--white); }
+
+    /* FEATURES */
+    .features { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 88px 32px; }
+    .features-inner { max-width: 1120px; margin: 0 auto; }
+    .features-header { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; margin-bottom: 48px; align-items: end; }
+    .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .fcard { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 32px; }
+    .fcard-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); background: var(--blue-light); padding: 3px 10px; border-radius: 4px; margin-bottom: 18px; }
+    .fcard h3 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 8px; }
+    .fcard p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+    /* TESTIMONIALS */
+    .testimonials { max-width: 1120px; margin: 0 auto; padding: 88px 32px; }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+    .tcard { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px; }
+    .tcard-quote { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .tcard-author { display: flex; align-items: center; gap: 12px; }
+    .tcard-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--text-2); flex-shrink: 0; }
+    .tcard-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .tcard-role { font-size: 12px; color: var(--text-3); }
+    .tcard-stars { color: #F59E0B; font-size: 13px; margin-bottom: 14px; letter-spacing: 1px; }
+
+    /* FAQ */
+    .faq { background: var(--bg-card); border-top: 1px solid var(--border); padding: 88px 32px; }
+    .faq-inner { max-width: 720px; margin: 0 auto; }
+    .faq-list { margin-top: 48px; display: flex; flex-direction: column; gap: 2px; border-radius: var(--r-lg); overflow: hidden; background: var(--border); }
+    .faq-item { background: var(--white); }
+    .faq-q { width: 100%; text-align: left; background: none; border: none; padding: 20px 24px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: var(--text); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; line-height: 1.4; }
+    .faq-q:hover { background: var(--bg-card); }
+    .faq-icon { font-size: 18px; color: var(--text-3); flex-shrink: 0; transition: transform .2s; font-weight: 400; line-height: 1; }
+    .faq-a { font-size: 14px; color: var(--text-2); line-height: 1.75; padding: 0 24px 20px; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    /* PRICING */
+    .pricing { max-width: 860px; margin: 0 auto; padding: 88px 32px; }
+    .pricing-header { margin-bottom: 48px; }
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pcard { border-radius: var(--r-lg); padding: 32px; border: 1.5px solid var(--border); background: var(--white); }
+    .pcard.pro { background: var(--bg-dark); border-color: var(--bg-dark); }
+    .pcard-tier { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 16px; }
+    .pcard.pro .pcard-tier { color: #52525B; }
+    .pcard-price { font-size: 48px; font-weight: 700; letter-spacing: -.04em; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .pcard.pro .pcard-price { color: var(--white); }
+    .pcard-price sup { font-size: 24px; font-weight: 600; vertical-align: super; }
+    .pcard-price sub { font-size: 16px; font-weight: 400; letter-spacing: 0; color: var(--text-3); }
+    .pcard.pro .pcard-price sub { color: #52525B; }
+    .pcard-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .pcard.pro .pcard-desc { color: #71717A; border-color: #27272A; }
+    .pcard-list { list-style: none; margin-bottom: 32px; }
+    .pcard-list li { font-size: 14px; color: var(--text-2); padding: 6px 0; display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+    .pcard.pro .pcard-list li { color: #A1A1AA; }
+    .pcard-list li .ic { width: 16px; height: 16px; border-radius: 50%; background: #DCFCE7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .pcard-list li .ic svg { width: 8px; height: 8px; }
+    .pcard-list li .no { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 14px; color: var(--text-3); line-height: 1; }
+    .pcard-list li.dim { opacity: .38; }
+    .pcard-list li strong { color: var(--text); font-weight: 600; }
+    .pcard.pro .pcard-list li strong { color: var(--white); }
+    .btn-block { display: block; width: 100%; text-align: center; font-size: 14px; font-weight: 600; letter-spacing: -.01em; padding: 13px; border-radius: var(--r); cursor: pointer; text-decoration: none; transition: opacity .15s, background .15s; }
+    .btn-block.line { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+    .btn-block.line:hover { background: var(--bg-card); }
+    .btn-block.fill { background: var(--white); color: var(--bg-dark); border: none; }
+    .btn-block.fill:hover { opacity: .88; }
+    .pricing-note { font-size: 13px; color: var(--text-3); text-align: center; margin-top: 20px; }
+
+    /* FINAL CTA */
+    .cta { background: var(--bg-dark); padding: 88px 32px; text-align: center; }
+    .cta h2 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; letter-spacing: -.04em; color: var(--white); line-height: 1.1; margin-bottom: 14px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .cta p { font-size: 16px; color: #71717A; margin-bottom: 36px; }
+    .cta-form { display: flex; gap: 8px; max-width: 400px; margin: 0 auto 14px; }
+    .cta-input { flex: 1; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); background: #27272A; border: 1.5px solid #3F3F46; border-radius: var(--r); padding: 12px 16px; outline: none; color: var(--white); transition: border-color .15s; }
+    .cta-input::placeholder { color: #52525B; }
+    .cta-input:focus { border-color: var(--blue); }
+    .btn-white { background: var(--white); color: var(--bg-dark); font-size: 14px; font-weight: 600; letter-spacing: -.01em; padding: 12px 22px; border-radius: var(--r); border: none; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+    .btn-white:hover { opacity: .88; }
+    .cta-note { font-size: 13px; color: #52525B; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-logo { font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: var(--text); text-decoration: none; }
+    .footer-logo span { color: var(--blue); }
+    .footer-copy { font-size: 13px; color: var(--text-3); }
+
+    /* RESPONSIVE */
+    @media (max-width: 860px) {
+      nav { padding: 0 20px; }
+      .nav-link { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 56px 20px 0; gap: 40px; }
+      .hero-right { order: -1; }
+      .hero-form-inner { flex-direction: column; }
+      .social-proof { padding: 20px 20px 0; gap: 16px; }
+      .sp-divider { display: none; }
+      .brands { padding: 20px; }
+      .brands-label { display: none; }
+      .problem { padding: 64px 20px; }
+      .problem-top { grid-template-columns: 1fr; gap: 24px; }
+      .stats-row { grid-template-columns: 1fr; }
+      .how { padding: 64px 20px; }
+      .how-grid { grid-template-columns: 1fr; }
+      .gallery { padding: 0 20px 64px; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      .features { padding: 64px 20px; }
+      .features-header { grid-template-columns: 1fr; gap: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .testi-grid { grid-template-columns: 1fr; }
+      .testimonials { padding: 64px 20px; }
+      .faq { padding: 64px 20px; }
+      .pricing { padding: 64px 20px; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .cta { padding: 64px 20px; }
+      .cta-form { flex-direction: column; }
+      footer { padding: 24px 20px; flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">Dial<span>IQ</span></a>
+  <div class="nav-r">
+    <a class="nav-link" href="#how">How it works</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <a class="btn-sm" href="#signup">Start free</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Built for watch dealers</div>
+    <h1>The price your<br>counterpart<br><em>already knows</em></h1>
+    <p class="hero-sub">
+      Photograph any luxury watch, confirm condition in four taps, and get the actual price dealers are trading at right now. Not what Chrono24 lists.
+    </p>
+    <div class="hero-form" id="signup">
+      <div class="hero-form-inner">
+        <input class="hero-input" type="email" placeholder="Your email address" autocomplete="email" />
+        <a class="btn-lg" href="#">Get free access</a>
+      </div>
+    </div>
+    <p class="hero-note">5 free analyses per month. No credit card required.</p>
+  </div>
+  <div class="hero-right">
+    <div class="watch-stack">
+      <div class="watch-row">
+        <img class="watch-img" src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=200&q=80&auto=format&fit=crop" alt="Rolex Submariner" loading="eager" />
+        <div class="watch-info">
+          <div class="watch-name">Rolex Submariner</div>
+          <div class="watch-ref">126610LN · 2022 · Full set</div>
+          <div class="watch-prices">
+            <div>
+              <div class="watch-price-label">Buy up to</div>
+              <div class="watch-price-value">13,200</div>
+            </div>
+            <div>
+              <div class="watch-price-label">Margin</div>
+              <div class="watch-price-value green">2,200</div>
+            </div>
+          </div>
+        </div>
+        <div class="watch-badge badge-good">Good buy</div>
+      </div>
+      <div class="watch-row">
+        <img class="watch-img" src="https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=200&q=80&auto=format&fit=crop" alt="Audemars Piguet Royal Oak" loading="eager" />
+        <div class="watch-info">
+          <div class="watch-name">Audemars Piguet Royal Oak</div>
+          <div class="watch-ref">15500ST · 2021 · No papers</div>
+          <div class="watch-prices">
+            <div>
+              <div class="watch-price-label">Buy up to</div>
+              <div class="watch-price-value">28,400</div>
+            </div>
+            <div>
+              <div class="watch-price-label">Margin</div>
+              <div class="watch-price-value green">3,100</div>
+            </div>
+          </div>
+        </div>
+        <div class="watch-badge badge-ok">Fair</div>
+      </div>
+      <div class="watch-row">
+        <img class="watch-img" src="https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=200&q=80&auto=format&fit=crop" alt="Patek Philippe Nautilus" loading="eager" />
+        <div class="watch-info">
+          <div class="watch-name">Patek Philippe Nautilus</div>
+          <div class="watch-ref">5711/1A · 2019 · Full set</div>
+          <div class="watch-prices">
+            <div>
+              <div class="watch-price-label">Buy up to</div>
+              <div class="watch-price-value">94,000</div>
+            </div>
+            <div>
+              <div class="watch-price-label">Margin</div>
+              <div class="watch-price-value green">6,800</div>
+            </div>
+          </div>
+        </div>
+        <div class="watch-badge badge-good">Good buy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<div class="social-proof">
+  <div class="sp-item"><span class="sp-dot"></span>Used by dealers across Europe and the US</div>
+  <div class="sp-divider"></div>
+  <div class="sp-item"><span class="sp-dot"></span>20,000+ references recognised</div>
+  <div class="sp-divider"></div>
+  <div class="sp-item"><span class="sp-dot"></span>Prices updated daily from real transactions</div>
+</div>
+
+<!-- BRANDS -->
+<div class="brands">
+  <div class="brands-inner">
+    <p class="brands-label">Covers</p>
+    <div class="brands-list">
+      <span class="brand-name">Rolex</span>
+      <span class="brand-name">Patek Philippe</span>
+      <span class="brand-name">Audemars Piguet</span>
+      <span class="brand-name">Richard Mille</span>
+      <span class="brand-name">Vacheron Constantin</span>
+      <span class="brand-name">Cartier</span>
+      <span class="brand-name">IWC</span>
+      <span class="brand-name">Omega</span>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <div class="problem-inner">
+    <div class="problem-top">
+      <h2 class="problem-h">Chrono24 shows what sellers ask.<br>Dealers trade at different numbers.</h2>
+      <p class="problem-p">The real price lives in closed Telegram groups and private dealer networks. Without access to that data, you are negotiating against someone who already has it. Every deal where you overpay by 10% compounds across your entire volume.</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num">10<span>-20%</span></div>
+        <div class="stat-desc">Typical gap between public listing prices and actual dealer street prices on the same reference</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num"><span>$</span>23B</div>
+        <div class="stat-desc">Global pre-owned luxury watch market in 2024. Growing to $45B by 2030 as demand outpaces primary supply</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">&lt;<span>30s</span></div>
+        <div class="stat-desc">Time to get a real dealer price with DialIQ versus hours of cross-referencing sources manually</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <p class="section-kicker">How it works</p>
+  <h2 class="section-h">From photo to decision in under 30 seconds</h2>
+  <p class="section-sub">No forms, no search, no manual cross-referencing. You photograph the watch, confirm four details, and get a number you can act on before the seller reads your hesitation.</p>
+  <div class="how-grid">
+    <div class="how-cell">
+      <p class="how-n">01</p>
+      <h3>Photograph the watch</h3>
+      <p>The AI identifies brand, model, exact reference, and year variant from a single image. Sub-variants and dial generations included. No manual input needed at this stage.</p>
+    </div>
+    <div class="how-cell">
+      <p class="how-n">02</p>
+      <h3>Confirm condition in four taps</h3>
+      <p>Box present? Papers? Year? Condition grade? Four taps. The price adjusts in real time as you select each option. Takes under 10 seconds.</p>
+    </div>
+    <div class="how-cell">
+      <p class="how-n">03</p>
+      <h3>Get the dealer price</h3>
+      <p>Buy price, sell price, potential margin, and weekly trend pulled from real dealer transactions. Decide before the conversation moves on.</p>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<div class="gallery">
+  <p class="section-kicker" style="margin-bottom: 24px;">Recognised references</p>
+  <div class="gallery-grid">
+    <div class="gallery-card">
+      <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&q=80&auto=format&fit=crop" alt="Rolex Submariner" loading="lazy" />
+      <div class="gallery-overlay"><p class="gallery-brand">Rolex</p><p class="gallery-model">Submariner</p></div>
+    </div>
+    <div class="gallery-card">
+      <img src="https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=400&q=80&auto=format&fit=crop" alt="Audemars Piguet Royal Oak" loading="lazy" />
+      <div class="gallery-overlay"><p class="gallery-brand">Audemars Piguet</p><p class="gallery-model">Royal Oak</p></div>
+    </div>
+    <div class="gallery-card">
+      <img src="https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=400&q=80&auto=format&fit=crop" alt="Patek Philippe Nautilus" loading="lazy" />
+      <div class="gallery-overlay"><p class="gallery-brand">Patek Philippe</p><p class="gallery-model">Nautilus</p></div>
+    </div>
+    <div class="gallery-card">
+      <img src="https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=400&q=80&auto=format&fit=crop" alt="Luxury watches" loading="lazy" />
+      <div class="gallery-overlay"><p class="gallery-brand">And many more</p><p class="gallery-model">20,000+ references</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <div class="features-header">
+      <div>
+        <p class="section-kicker">What you get</p>
+        <h2 class="section-h" style="margin-bottom: 0;">Four things, done well</h2>
+      </div>
+      <p style="font-size: 15px; color: var(--text-2); line-height: 1.7; padding-top: 4px;">Not a dashboard full of charts you open once. Four features that save you money on every single deal.</p>
+    </div>
+    <div class="features-grid">
+      <div class="fcard">
+        <span class="fcard-tag">Identification</span>
+        <h3>Reference-level AI recognition</h3>
+        <p>Identifies sub-variants, dial generations, and year-specific details that change the price significantly. Not just "Rolex Submariner" but the exact reference that determines the real value.</p>
+      </div>
+      <div class="fcard">
+        <span class="fcard-tag">Pricing</span>
+        <h3>Dealer street price, not listing price</h3>
+        <p>Prices sourced from active dealer networks and real transaction data. The number people actually trade at, not the number they put on a Chrono24 listing hoping someone buys it.</p>
+      </div>
+      <div class="fcard">
+        <span class="fcard-tag">Trends</span>
+        <h3>Weekly movement per reference</h3>
+        <p>See whether a specific reference is moving up or down this week. Useful when deciding whether to hold a piece or move it before the window closes.</p>
+      </div>
+      <div class="fcard">
+        <span class="fcard-tag">Alerts</span>
+        <h3>Price alerts on any reference</h3>
+        <p>Set a maximum buy price for any reference. Get an email the moment a deal matching that price appears. No need to monitor anything manually.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <p class="section-kicker">What dealers say</p>
+  <h2 class="section-h">Used by dealers who move volume</h2>
+  <div class="testi-grid">
+    <div class="tcard">
+      <div class="tcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <p class="tcard-quote">"I was using three different sources to price a watch before negotiating. Now I open DialIQ and I have the number in 20 seconds. It has already saved me from two bad buys this month."</p>
+      <div class="tcard-author">
+        <div class="tcard-avatar">M</div>
+        <div>
+          <div class="tcard-name">Marco R.</div>
+          <div class="tcard-role">Independent dealer, Milan</div>
+        </div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <p class="tcard-quote">"The gap between what Chrono24 shows and what dealers actually pay is real. DialIQ gives me that actual number. For my margins, that makes a meaningful difference every single week."</p>
+      <div class="tcard-author">
+        <div class="tcard-avatar">D</div>
+        <div>
+          <div class="tcard-name">David K.</div>
+          <div class="tcard-role">Grey market dealer, London</div>
+        </div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <p class="tcard-quote">"I photograph the watch while the seller is still talking. By the time they finish, I already know my number. That changed how I negotiate completely."</p>
+      <div class="tcard-author">
+        <div class="tcard-avatar">S</div>
+        <div>
+          <div class="tcard-name">Sebastian W.</div>
+          <div class="tcard-role">Dealer, Geneva</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="faq-inner">
+    <p class="section-kicker">Common questions</p>
+    <h2 class="section-h">Before you sign up</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Where do the dealer prices actually come from?
+          <span class="faq-icon">+</span>
+        </button>
+        <p class="faq-a">DialIQ aggregates price data from active dealer Telegram groups, private trading networks, and closed market transactions. This is the same data dealers share between themselves, now accessible in a structured format. We do not use Chrono24 or WatchCharts as our primary source for the Dealer Pro price.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How accurate is the AI identification?
+          <span class="faq-icon">+</span>
+        </button>
+        <p class="faq-a">The identification engine recognises brand, model, exact reference, and year variant from a single image. It is trained specifically on luxury watch data including sub-variants, dial generations, and bezel configurations. For rare references, you can manually confirm or correct the result before the price is generated.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How often are prices updated?
+          <span class="faq-icon">+</span>
+        </button>
+        <p class="faq-a">Prices are updated daily from ongoing transaction monitoring. For high-volume references like the Rolex Submariner or Patek Nautilus, data refreshes multiple times per day. For rarer references, the update frequency depends on actual market activity.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it work for vintage references?
+          <span class="faq-icon">+</span>
+        </button>
+        <p class="faq-a">Yes, with some limitations. Modern and neo-vintage references from the last 20 years have the deepest data coverage. For pre-1990 vintage pieces, identification works well but pricing data can be thinner depending on transaction volume for that specific reference.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I cancel at any time?
+          <span class="faq-icon">+</span>
+        </button>
+        <p class="faq-a">Yes. No contracts, no minimum terms. Cancel from your account settings at any time and you will not be charged again. Your access continues until the end of your current billing period.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <p class="section-kicker">Pricing</p>
+    <h2 class="section-h">Two plans</h2>
+    <p style="font-size: 15px; color: var(--text-2); line-height: 1.65; max-width: 420px;">Start free to see if it works for you. Upgrade when you want the dealer price, not the listing price.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pcard">
+      <p class="pcard-tier">Free</p>
+      <p class="pcard-price"><sup>€</sup>0</p>
+      <p class="pcard-desc">5 analyses per month. No credit card. Enough to decide whether this fits your workflow before committing.</p>
+      <ul class="pcard-list">
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>AI watch identification</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Official market price</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Basic trend indicator</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>5 analyses per month</li>
+        <li class="dim"><span class="no">-</span>Dealer street price</li>
+        <li class="dim"><span class="no">-</span>Bid/ask gap analysis</li>
+        <li class="dim"><span class="no">-</span>Price alerts</li>
+        <li class="dim"><span class="no">-</span>Watchlist</li>
+      </ul>
+      <a class="btn-block line" href="#signup">Start for free</a>
+    </div>
+    <div class="pcard pro">
+      <p class="pcard-tier">Dealer Pro</p>
+      <p class="pcard-price"><sup>€</sup>79<sub>/mo</sub></p>
+      <p class="pcard-desc">Unlimited analyses. The real dealer price on every watch. No contracts, cancel any time.</p>
+      <ul class="pcard-list">
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>AI watch identification</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Official market price</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>90-day price trend</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Unlimited analyses</li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><strong>Dealer street price</strong></li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><strong>Bid/ask gap analysis</strong></li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><strong>Instant price alerts</strong></li>
+        <li><span class="ic"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><strong>Watchlist, 50 references</strong></li>
+      </ul>
+      <a class="btn-block fill" href="#signup">Get Dealer Pro</a>
+    </div>
+  </div>
+  <p class="pricing-note">One bad buy costs more than a full year of Dealer Pro.</p>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta">
+  <h2>Stop negotiating blind.</h2>
+  <p>Start with 5 free analyses. No credit card, no commitment.</p>
+  <div class="cta-form">
+    <input class="cta-input" type="email" placeholder="Your email address" autocomplete="email" />
+    <button class="btn-white">Get free access</button>
+  </div>
+  <p class="cta-note">Free plan available. Upgrade when you are ready.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="#">Dial<span>IQ</span></a>
+  <p class="footer-copy">© 2026 DialIQ. Built for watch dealers.</p>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>
